@@ -175,7 +175,7 @@ namespace ROYNDemo
 
         private static void Main(string[] args)
         {
-            var query = new RoynRequest<User>()
+            RoynRequest query = new RoynRequest<User>()
                 .Add(x => x.Job.Name)
                 .Add(x => x.Job.Id)
                 .Add(x => x.Username)

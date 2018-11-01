@@ -27,8 +27,54 @@ namespace ROYN
         Descending
     }
 
+    public class TypeName
+    {
+        public string Name { get; protected set; }
+        public ResolveOptions ResolveOption { get; protected set; }
+
+        internal TypeName(string name, ResolveOptions resolveOption)
+        {
+            if (string.IsNullOrEmpty(name))
+            {
+                throw new ArgumentException("message", nameof(name));
+            }
+
+            Name = name;
+            ResolveOption = resolveOption;
+        }
+
+        public TypeName(Type type, ResolveOptions resolveOption)
+        {
+            if (type == null)
+            {
+                throw new ArgumentNullException(nameof(type));
+            }
+
+            ResolveOption = resolveOption;
+            switch (resolveOption)
+            {
+                case ResolveOptions.Name:
+                    Name = type.Name;
+                    break;
+
+                case ResolveOptions.FullName:
+                    Name = type.FullName;
+                    break;
+
+                case ResolveOptions.AssemblyQualifiedName:
+                    Name = type.AssemblyQualifiedName;
+                    break;
+
+                default:
+                    Name = type.Name;
+                    break;
+            }
+        }
+    }
+
     public class RoynRequest
     {
+        public TypeName TypeName { get; protected set; }
         protected readonly List<string> _columns;
         internal List<string> Columns { get { return _columns; } }
         protected string Filter { get; set; }
@@ -36,9 +82,34 @@ namespace ROYN
         internal Dictionary<string, SortDirection> InternalOrders { get { return Orders; } }
         protected readonly Dictionary<string, SortDirection> Orders = new Dictionary<string, SortDirection>();
 
-        public RoynRequest()
+        public RoynRequest(TypeName typeName)
         {
             _columns = new List<string>();
+            TypeName = typeName;
+        }
+
+        internal virtual RoynRequest<T> AsGeneric<T>()
+        {
+            var g = new RoynRequest<T>();
+            CopyTo(g);
+            return g;
+        }
+
+        internal void CopyTo(RoynRequest roynRequest)
+        {
+            roynRequest._columns.Clear();
+            roynRequest._columns.AddRange(_columns);
+
+            roynRequest.Filter = Filter;
+            roynRequest.Orders.Clear();
+            foreach (var order in Orders)
+            {
+                roynRequest.Orders.Add(order.Key, order.Value);
+            }
+            if (TypeName != null)
+            {
+                roynRequest.TypeName = new TypeName(TypeName.Name, TypeName.ResolveOption);
+            }
         }
 
         protected RoynRequest Where(Expression expression)
@@ -120,6 +191,10 @@ namespace ROYN
         {
             _columns.Add(property);
             return this;
+        }
+
+        public RoynRequest() : base(new TypeName(typeof(T), ResolveOptions.FullName))
+        {
         }
     }
 }
