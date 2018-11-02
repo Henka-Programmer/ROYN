@@ -11,18 +11,18 @@ namespace ROYN
 {
     public static class RoynHelper
     {
-        public static RoynResult RoynSelect<T>(this IQueryable<T> source, RoynRequest<T> roynRequest) where T : class
-        {
-            var builder = new SelectLambdaBuilder<T>(roynRequest.Columns.ToArray());
-            var newSource = HandleIncludes(source.AsNoTracking(), roynRequest.Columns.ToArray());
-            newSource = HandleFilter(newSource, roynRequest);
-            var data = newSource.Select(builder.CreateNewStatement(roynRequest.Columns.ToArray()));
-            var orderedData = HandleOrder(newSource, roynRequest);
-            var result = new RoynResult();
-            var list = orderedData.ToList();
-            result.SetResult(list, roynRequest.Columns.ToArray());
-            return result;
-        }
+        //public static RoynResult RoynSelect<T>(this IQueryable<T> source, RoynRequest<T> roynRequest) where T : class
+        //{
+        //    var builder = new SelectLambdaBuilder(roynRequest.CLRType);
+        //    var newSource = HandleIncludes(source.AsNoTracking(), roynRequest.Columns.ToArray());
+        //    newSource = HandleFilter(newSource, roynRequest);
+        //    var data = newSource.Select(builder.CreateNewStatement<T>(roynRequest.Columns.ToArray()));
+        //    var orderedData = HandleOrder(newSource, roynRequest);
+        //    var result = new RoynResult();
+        //    var list = orderedData.ToList();
+        //    result.SetResult(list, roynRequest.Columns.ToArray());
+        //    return result;
+        //}
 
         private static IQueryable<T> HandleFilter<T>(IQueryable<T> source, RoynRequest<T> roynRequest) where T : class
         {
@@ -201,11 +201,11 @@ namespace ROYN
 
         public static RoynResult RoynSelect<T>(this DbSet<T> source, RoynRequest<T> roynRequest) where T : class
         {
-            var builder = new SelectLambdaBuilder<T>(roynRequest.Columns.ToArray());
+            var builder = new SelectLambdaBuilder(roynRequest.CLRType);
             var includeSource = HandleIncludes(source.AsNoTracking(), roynRequest.Columns.ToArray());
             var filteredSource = HandleFilter(includeSource, roynRequest);
             var orderedDataSource = HandleOrder(filteredSource, roynRequest);
-            var dataSource = orderedDataSource.Select(builder.CreateNewStatement(roynRequest.Columns.ToArray()));
+            var dataSource = orderedDataSource.Select(builder.CreateNewStatement<T>(roynRequest.Columns.ToArray()));
             var result = new RoynResult();
             result.SetResult(dataSource.ToList(), roynRequest.Columns.ToArray());
 

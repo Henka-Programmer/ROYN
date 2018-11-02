@@ -18,13 +18,13 @@ namespace ROYN
 
         public RoynResult Execute<T>(DbSet<T> source, RoynRequest roynRequest) where T : class
         {
-            return RoynHelper.RoynSelect<T>(source, roynRequest.AsGeneric<T>());
+            return RoynHelper.RoynSelect(source, roynRequest.AsGeneric<T>());
         }
 
-        public RoynResult Execute<T>(DbSet source, RoynRequest roynRequest) where T : class
-        {
-            return RoynHelper.RoynSelect(source as DbSet<T>, roynRequest.AsGeneric<T>());
-        }
+        //public RoynResult Execute<T>(DbSet source, RoynRequest roynRequest) where T : class
+        //{
+        //    return RoynHelper.RoynSelect(source as DbSet<T>, roynRequest.AsGeneric<T>());
+        //}
 
         public void Dispose()
         {

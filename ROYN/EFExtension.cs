@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Data.Entity;
+using System.Linq;
 using System.Reflection;
 
 namespace ROYN
@@ -22,19 +23,34 @@ namespace ROYN
             }
         }
 
+        public static MethodInfo GetGenericMethod(this Type t, string name, Type[] genericArgTypes, Type[] argTypes, Type returnType)
+        {
+            MethodInfo foo1 = (from m in t.GetMethods(BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance)
+                               where m.Name == name
+                               && m.GetGenericArguments().Length == genericArgTypes.Length
+                               && m.GetParameters().Select(pi => pi.ParameterType.IsGenericType ? pi.ParameterType.GetGenericTypeDefinition() : pi.ParameterType).SequenceEqual(argTypes) &&
+                               (returnType == null || (m.ReturnType.IsGenericType ? m.ReturnType.GetGenericTypeDefinition() : m.ReturnType) == returnType)
+                               select m).FirstOrDefault();
+
+            if (foo1 != null)
+            {
+                return foo1.MakeGenericMethod(genericArgTypes);
+            }
+            return null;
+        }
+
         public static RoynResult Execute(this DbContext context, RoynRequest roynRequest)
         {
             using (var excutor = new RoynExecutor())
             {
                 var type = excutor.TypeNameResolver.Resolve(roynRequest.TypeName);
-                MethodInfo executeMethod = typeof(RoynExecutor).GetMethod("Execute", new Type[] { typeof(DbSet<>).MakeGenericType(type), typeof(RoynRequest) });
-                MethodInfo genericExecuteMethod = executeMethod.MakeGenericMethod(type);
+                roynRequest.CLRType = type;
 
-                //MethodInfo dbSetMethod = typeof(DbContext).GetMethod("Set", new Type[] { typeof(DbSet<>).MakeGenericType(type), typeof(RoynRequest) });
-                //MethodInfo genericExecuteMethod = executeMethod.MakeGenericMethod(type);
+                MethodInfo genericExecuteMethod = typeof(RoynExecutor).GetGenericMethod("Execute", new Type[] { type }, new Type[] { typeof(DbSet<>), typeof(RoynRequest) }, typeof(RoynResult));   //executeMethod.MakeGenericMethod(type);
 
-                //return (RoynResult)genericExecuteMethod.Invoke(excutor, new object[] { source, roynRequest });
-                return excutor.Execute(type, context.Set(type), roynRequest);
+                MethodInfo genericDbSetMethod = typeof(DbContext).GetGenericMethod("Set", new Type[] { type }, new Type[] { }, typeof(DbSet<>));
+
+                return (RoynResult)genericExecuteMethod.Invoke(excutor, new object[] { genericDbSetMethod.Invoke(context, null), roynRequest });
             }
         }
     }

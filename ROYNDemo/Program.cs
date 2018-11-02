@@ -1,5 +1,6 @@
 ﻿using MySql.Data.Entity;
 using MySql.Data.MySqlClient;
+using Newtonsoft.Json;
 using ROYN;
 using System;
 using System.Collections.Generic;
@@ -175,13 +176,16 @@ namespace ROYNDemo
 
         private static void Main(string[] args)
         {
-            RoynRequest query = new RoynRequest<User>()
+            var query = new RoynRequest<User>()
                 .Add(x => x.Job.Name)
                 .Add(x => x.Job.Id)
                 .Add(x => x.Username)
                 .Add(x => x.Id)
                 .Add(x => x.Role)
-                .Add(x => x.JobId).OrderBy(x=>x.Job.Name);
+                .Add(x => x.JobId).OrderBy(x => x.Job.Name);
+
+            var queryS = JsonConvert.SerializeObject(query);
+            var queryF = JsonConvert.DeserializeObject<RoynRequest>(queryS);
 
             using (var context = new MyDbContext())
             {
@@ -192,7 +196,7 @@ namespace ROYNDemo
                     context.SaveChanges();
                 }
 
-                RoynResult q = context.Execute(query);
+                RoynResult q = context.Execute(queryF);
 
                 Console.WriteLine(q.Raw);
             }

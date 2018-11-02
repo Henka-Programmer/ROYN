@@ -1,4 +1,5 @@
-﻿using ROYN.Extensions;
+﻿using Newtonsoft.Json;
+using ROYN.Extensions;
 using Serialize.Linq.Serializers;
 using System;
 using System.Collections.Generic;
@@ -32,6 +33,7 @@ namespace ROYN
         public string Name { get; protected set; }
         public ResolveOptions ResolveOption { get; protected set; }
 
+        [JsonConstructor]
         internal TypeName(string name, ResolveOptions resolveOption)
         {
             if (string.IsNullOrEmpty(name))
@@ -75,11 +77,25 @@ namespace ROYN
     public class RoynRequest
     {
         public TypeName TypeName { get; protected set; }
+
+        [JsonIgnore]
+        public Type CLRType { get; internal set; }
+
         protected readonly List<string> _columns;
+
+        [JsonProperty]
         internal List<string> Columns { get { return _columns; } }
+
+        [JsonProperty]
         protected string Filter { get; set; }
+
+        [JsonIgnore]
         internal string InternalFilter { get { return Filter; } }
+
+        [JsonProperty]
         internal Dictionary<string, SortDirection> InternalOrders { get { return Orders; } }
+
+        [JsonProperty]
         protected readonly Dictionary<string, SortDirection> Orders = new Dictionary<string, SortDirection>();
 
         public RoynRequest(TypeName typeName)
@@ -99,7 +115,7 @@ namespace ROYN
         {
             roynRequest._columns.Clear();
             roynRequest._columns.AddRange(_columns);
-
+            roynRequest.CLRType = CLRType;
             roynRequest.Filter = Filter;
             roynRequest.Orders.Clear();
             foreach (var order in Orders)
@@ -119,7 +135,7 @@ namespace ROYN
                 throw new InvalidOperationException("Multiple Where Clause Not Supported");
             }
             if (expression == null) throw new ArgumentNullException("expression");
-            ExpressionSerializer Serializer = new ExpressionSerializer(new JsonSerializer(), new Serialize.Linq.Factories.FactorySettings { AllowPrivateFieldAccess = true });
+            ExpressionSerializer Serializer = new ExpressionSerializer(new Serialize.Linq.Serializers.JsonSerializer(), new Serialize.Linq.Factories.FactorySettings { AllowPrivateFieldAccess = true });
             Filter = Serializer.SerializeText(expression);
             return this;
         }

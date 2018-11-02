@@ -6,15 +6,16 @@ using System.Reflection;
 
 namespace ROYN
 {
-    public class SelectLambdaBuilder<T>
+    public class SelectLambdaBuilder
     {
         // as a performence consideration I cached already computed type-properties
         private static Dictionary<Type, PropertyInfo[]> _typePropertyInfoMappings = new Dictionary<Type, PropertyInfo[]>();
 
-        private readonly Type _typeOfBaseClass = typeof(T);
+        private readonly Type _typeOfBaseClass;
 
-        public SelectLambdaBuilder(string[] columns)
+        public SelectLambdaBuilder(Type type)
         {
+            _typeOfBaseClass = type;
             if (!_typePropertyInfoMappings.Keys.Contains(_typeOfBaseClass))
             {
                 var properties = _typeOfBaseClass.GetProperties();
@@ -50,7 +51,7 @@ namespace ROYN
             return Expression.Condition(equals, Expression.Constant(null, returnExpr.Type), returnExpr);
         }
 
-        public Func<T, T> CreateNewStatement(string[] columns)
+        public Func<T, T> CreateNewStatement<T>(string[] columns)
         {
             ParameterExpression xParameter = Expression.Parameter(_typeOfBaseClass, "s");
             NewExpression xNew = Expression.New(_typeOfBaseClass);
