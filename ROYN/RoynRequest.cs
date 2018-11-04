@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq.Expressions;
+using System.Runtime.Serialization;
 
 namespace ROYN
 {
@@ -22,15 +23,23 @@ namespace ROYN
     //    public IReadOnlyList<RoynProperty> Properties { get { return _Properties; } }
     //}
 
+    [DataContract]
     public enum SortDirection
     {
+        [EnumMember]
         Ascending,
+
+        [EnumMember]
         Descending
     }
 
+    [DataContract]
     public class TypeName
     {
+        [DataMember]
         public string Name { get; protected set; }
+
+        [DataMember]
         public ResolveOptions ResolveOption { get; protected set; }
 
         [JsonConstructor]
@@ -74,28 +83,32 @@ namespace ROYN
         }
     }
 
+    [DataContract]
     public class RoynRequest
     {
+        [DataMember]
         public TypeName TypeName { get; protected set; }
 
         [JsonIgnore]
         public Type CLRType { get; internal set; }
 
+        [DataMember]
+        [JsonProperty]
         protected readonly List<string> _columns;
 
-        [JsonProperty]
         internal List<string> Columns { get { return _columns; } }
 
         [JsonProperty]
+        [DataMember]
         protected string Filter { get; set; }
 
         [JsonIgnore]
         internal string InternalFilter { get { return Filter; } }
 
-        [JsonProperty]
         internal Dictionary<string, SortDirection> InternalOrders { get { return Orders; } }
 
         [JsonProperty]
+        [DataMember]
         protected readonly Dictionary<string, SortDirection> Orders = new Dictionary<string, SortDirection>();
 
         public RoynRequest(TypeName typeName)

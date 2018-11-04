@@ -1,10 +1,13 @@
 ﻿using Newtonsoft.Json;
 using System.Linq;
+using System.Runtime.Serialization;
 
 namespace ROYN
 {
+    [DataContract]
     public class RoynResult
     {
+        [DataMember]
         public string Raw { get; private set; }
 
         public T GetResult<T>()
@@ -29,7 +32,7 @@ namespace ROYN
                 ReferenceLoopHandling = ReferenceLoopHandling.Serialize,
                 Formatting = Formatting.Indented
             };
-            
+
             Raw = JsonConvert.SerializeObject(data, serializerSettings);
         }
     }
