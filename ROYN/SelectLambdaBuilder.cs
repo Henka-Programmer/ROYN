@@ -51,7 +51,7 @@ namespace ROYN
             return Expression.Condition(equals, Expression.Constant(null, returnExpr.Type), returnExpr);
         }
 
-        public Func<T, T> CreateNewStatement<T>(string[] columns)
+        public Expression<Func<T, TResult>> CreateNewStatement<T, TResult>(string[] columns)
         {
             ParameterExpression xParameter = Expression.Parameter(_typeOfBaseClass, "s");
             NewExpression xNew = Expression.New(_typeOfBaseClass);
@@ -59,15 +59,15 @@ namespace ROYN
             var selectFields = GetFieldMapping(columns);
 
             var shpNestedPropertyBindings = new List<MemberAssignment>();
+            if (!_typePropertyInfoMappings.TryGetValue(_typeOfBaseClass, out PropertyInfo[] propertyInfos))
+            {
+                var properties = _typeOfBaseClass.GetProperties();
+                propertyInfos = properties;
+                _typePropertyInfoMappings.Add(_typeOfBaseClass, properties);
+            }
+
             foreach (var keyValuePair in selectFields)
             {
-                if (!_typePropertyInfoMappings.TryGetValue(_typeOfBaseClass, out PropertyInfo[] propertyInfos))
-                {
-                    var properties = _typeOfBaseClass.GetProperties();
-                    propertyInfos = properties;
-                    _typePropertyInfoMappings.Add(_typeOfBaseClass, properties);
-                }
-
                 var propertyType = propertyInfos
                     .FirstOrDefault(p => p.Name.ToLowerInvariant().Equals(keyValuePair.Key.ToLowerInvariant()))
                     .PropertyType;
@@ -106,9 +106,9 @@ namespace ROYN
             }
 
             var xInit = Expression.MemberInit(xNew, shpNestedPropertyBindings);
-            var lambda = Expression.Lambda<Func<T, T>>(xInit, xParameter);
+            var lambda = Expression.Lambda<Func<T, TResult>>(xInit, xParameter);
 
-            return lambda.Compile();
+            return lambda;
         }
     }
 }

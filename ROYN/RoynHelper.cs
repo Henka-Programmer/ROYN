@@ -205,11 +205,39 @@ namespace ROYN
             var includeSource = HandleIncludes(source.AsNoTracking(), roynRequest.Columns.ToArray());
             var filteredSource = HandleFilter(includeSource, roynRequest);
             var orderedDataSource = HandleOrder(filteredSource, roynRequest);
-            var dataSource = orderedDataSource.Select(builder.CreateNewStatement<T>(roynRequest.Columns.ToArray()));
+            var dataSource = HandleSkipTake(orderedDataSource, roynRequest);
+            dataSource = dataSource.Select(builder.CreateNewStatement<T, T>(roynRequest.Columns.ToArray()));
+
             var result = new RoynResult();
             result.SetResult(dataSource.ToList(), roynRequest.Columns.ToArray());
 
             return result;
+        }
+
+        public static RoynResult RoynSelect<T, TResult>(this DbSet<T> source, RoynRequest<T> roynRequest)
+            where T : class
+            where TResult : class
+        {
+            var builder = new SelectLambdaBuilder(roynRequest.CLRType);
+            var includeSource = HandleIncludes(source.AsNoTracking(), roynRequest.Columns.ToArray());
+            var filteredSource = HandleFilter(includeSource, roynRequest);
+            var orderedDataSource = HandleOrder(filteredSource, roynRequest);
+            var dataSource = HandleSkipTake(orderedDataSource, roynRequest);
+            var resultsSource = dataSource.Select(builder.CreateNewStatement<T, TResult>(roynRequest.Columns.ToArray()));
+
+            var result = new RoynResult();
+            result.SetResult(resultsSource.ToList(), roynRequest.Columns.ToArray());
+            return result;
+        }
+
+        private static IQueryable<T> HandleSkipTake<T>(IOrderedQueryable<T> querable, RoynRequest<T> roynRequest) where T : class
+        {
+            if (roynRequest.InternalSkipSize == null || roynRequest.InternalTakeSize == null)
+            {
+                return querable;
+            }
+
+            return querable.Skip(roynRequest.InternalSkipSize.Value).Take(roynRequest.InternalTakeSize.Value);
         }
 
         private static IQueryable<T> HandleIncludes<T>(IQueryable<T> source, string[] columns) where T : class

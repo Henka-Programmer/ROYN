@@ -55,6 +55,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DynamicTypeBuilder.cs" />
     <Compile Include="EFExtension.cs" />
     <Compile Include="Extensions\ExpressionExtension.cs" />
     <Compile Include="Extensions\PropertyInfoExtension.cs" />
@@ -65,6 +66,7 @@
     <Compile Include="PropertyPathHelper.cs" />
     <Compile Include="ResolveOptions.cs" />
     <Compile Include="RoynExecutor.cs" />
+    <Compile Include="RoynGraph.cs" />
     <Compile Include="RoynHelper.cs" />
     <Compile Include="RoynRequest.cs" />
     <Compile Include="RoynResult.cs" />

@@ -21,7 +21,7 @@ namespace WCFCommon.Services
             }
         }
 
-        public List<Product> GetProducts()
+        public List<Product> GetProducts(int size)
         {
             try
             {
@@ -30,7 +30,7 @@ namespace WCFCommon.Services
                     var r = ctx.Products
                         .Include(x => x.PurchasesUoM.Category)
                         .Include(x => x.SaleUoM.Category)
-                        .Include(x => x.Category.ParentCategory).ToList();
+                        .Include(x => x.Category.ParentCategory).OrderBy(x => x.Id).Skip(0).Take(size).ToList();
                     return r;
                 }
             }

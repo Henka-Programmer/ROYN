@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Data.Entity;
-using System.Linq;
-using System.Reflection;
 
 namespace ROYN
 {
@@ -14,11 +12,16 @@ namespace ROYN
         //    return RoynHelper.RoynSelect(source, roynRequest);
         //}
 
-       
-
         public RoynResult Execute<T>(DbSet<T> source, RoynRequest roynRequest) where T : class
         {
             return RoynHelper.RoynSelect(source, roynRequest.AsGeneric<T>());
+        }
+
+        public RoynResult Execute<T, TResult>(DbSet<T> source, RoynRequest roynRequest)
+            where T : class
+            where TResult : class
+        {
+            return RoynHelper.RoynSelect<T, TResult>(source, roynRequest.AsGeneric<T>());
         }
 
         //public RoynResult Execute<T>(DbSet source, RoynRequest roynRequest) where T : class

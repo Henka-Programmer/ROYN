@@ -20,6 +20,6 @@ namespace WCFCommon.Services
     {
         [OperationContract]
         [WebInvoke(ResponseFormat = WebMessageFormat.Json, BodyStyle = WebMessageBodyStyle.Wrapped)]
-        List<Product> GetProducts();
+        List<Product> GetProducts(int size);
     }
 }

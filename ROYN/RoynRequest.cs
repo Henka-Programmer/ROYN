@@ -96,6 +96,12 @@ namespace ROYN
         [JsonProperty]
         protected readonly List<string> _columns;
 
+        [JsonIgnore]
+        internal int? InternalSkipSize { get { return SkipSize; } }
+
+        [JsonIgnore]
+        internal int? InternalTakeSize { get { return TakeSize; } }
+
         internal List<string> Columns { get { return _columns; } }
 
         [JsonProperty]
@@ -104,6 +110,12 @@ namespace ROYN
 
         [JsonIgnore]
         internal string InternalFilter { get { return Filter; } }
+
+        [DataMember]
+        protected int? SkipSize = null;
+
+        [DataMember]
+        protected int? TakeSize = null;
 
         internal Dictionary<string, SortDirection> InternalOrders { get { return Orders; } }
 
@@ -131,6 +143,8 @@ namespace ROYN
             roynRequest.CLRType = CLRType;
             roynRequest.Filter = Filter;
             roynRequest.Orders.Clear();
+            roynRequest.SkipSize = SkipSize;
+            roynRequest.TakeSize = TakeSize;
             foreach (var order in Orders)
             {
                 roynRequest.Orders.Add(order.Key, order.Value);
@@ -219,6 +233,36 @@ namespace ROYN
         public RoynRequest<T> Add(string property)
         {
             _columns.Add(property);
+            return this;
+        }
+
+        public RoynRequest<T> Skip(int size)
+        {
+            if (Orders.Count == 0)
+            {
+                throw new InvalidOperationException("Skip and Take must be called after OrderBy");
+            }
+            SkipSize = size;
+            return this;
+        }
+
+        public RoynRequest<T> Take(int size)
+        {
+            if (Orders.Count == 0)
+            {
+                throw new InvalidOperationException("Skip and Take must be called after OrderBy");
+            }
+
+            if (size < 0)
+            {
+                throw new ArgumentOutOfRangeException($"Argument '{nameof(size)}' must be greater than zero ");
+            }
+
+            if (SkipSize == null)
+            {
+                throw new InvalidOperationException("Take must be called after Skip");
+            }
+            TakeSize = size;
             return this;
         }
 

@@ -12,7 +12,7 @@ namespace ROYN
             var includedProperties = new Dictionary<Type, List<PropertyInfo>>();
             if (includedPaths != null)
             {
-                foreach (var path in includedPaths.ToList())
+                foreach (var path in includedPaths)
                 {
                     var propName = path;
                     if (path.Contains("."))

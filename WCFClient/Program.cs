@@ -9,26 +9,9 @@ using WCFCommon.Services;
 
 namespace WCFClient
 {
-    public class ProductsServiceClient : ClientBase<IProductsService>
-    {
-        public ProductsServiceClient() : base(new BasicHttpBinding(), new EndpointAddress("http://localhost/productsService"))
-        {
-        }
-
-        public List<Product> GetProducts()
-        {
-            return Channel.GetProducts();
-        }
-
-        public RoynResult Execute(RoynRequest roynRequest)
-        {
-            return Channel.Execute(roynRequest);
-        }
-    }
-
     internal class Program
     {
-        private static long getSize(object obj)
+        private static long getDataSize(object obj)
         {
             DataContractSerializer ds = new DataContractSerializer(obj.GetType());
 
@@ -51,11 +34,21 @@ namespace WCFClient
             var channelFactory = new ChannelFactory<IProductsService>(basicHttpBinding, endpoint);
 
             IProductsService service = channelFactory.CreateChannel(endpoint);
+            for (int i = 0; i <= 100; i += 10)
+            {
+                RunIteration(service, i);
+            }
+
+            Console.ReadKey();
+        }
+
+        private static void RunIteration(IProductsService service, int size)
+        {
             var stopWatch = Stopwatch.StartNew();
-            var products = service.GetProducts();
+            var products = service.GetProducts(size);
             stopWatch.Stop();
 
-            System.Console.WriteLine($"Getting '{products.Count}' product by traditional way takes: {stopWatch.ElapsedMilliseconds} - data size:{getSize(products)} bytes");
+            System.Console.WriteLine($"Getting '{products.Count}' product by traditional way takes: {stopWatch.ElapsedMilliseconds} - data size:{getDataSize(products)} bytes");
 
             var stopWatch2 = Stopwatch.StartNew();
             var query = new RoynRequest<Product>()
@@ -77,15 +70,15 @@ namespace WCFClient
                 .Add(x => x.SoldInPOS)
                 .Add(x => x.SaleUoMId)
                 .Add(x => x.PurchasesUoMId)
-                ;
+                .OrderBy(x => x.Id)
+                .Skip(0)
+                .Take(size);
 
             var roynresult = service.Execute(query);
 
             var products2 = roynresult.GetResult<List<Product>>();
             stopWatch2.Stop();
-            System.Console.WriteLine($"Getting '{products2.Count}' product by royn way takes: {stopWatch2.ElapsedMilliseconds} - data size:{getSize(roynresult)} bytes");
-
-            Console.ReadKey();
+            System.Console.WriteLine($"Getting '{products2.Count}' product by royn way takes: {stopWatch2.ElapsedMilliseconds} - data size:{getDataSize(roynresult)} bytes");
         }
     }
 }

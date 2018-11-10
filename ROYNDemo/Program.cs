@@ -182,7 +182,7 @@ namespace ROYNDemo
                 .Add(x => x.Username)
                 .Add(x => x.Id)
                 .Add(x => x.Role)
-                .Add(x => x.JobId).OrderBy(x => x.Job.Name);
+                .Add(x => x.JobId).OrderBy(x => x.Job.Name).Skip(1).Take(2);
 
             var queryS = JsonConvert.SerializeObject(query);
             var queryF = JsonConvert.DeserializeObject<RoynRequest>(queryS);
