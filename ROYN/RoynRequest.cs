@@ -268,6 +268,7 @@ namespace ROYN
 
         public RoynRequest() : base(new TypeName(typeof(T), ResolveOptions.FullName))
         {
+            CLRType = typeof(T);
         }
     }
 }

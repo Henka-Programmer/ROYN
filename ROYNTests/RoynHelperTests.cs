@@ -24,5 +24,9 @@ namespace ROYNTests
             var result = query.ToList();
             Assert.IsTrue(result.All(x => x.Age == 0 && x.Date == DateTime.MinValue && x.Name != string.Empty));
         }
+
+       
+
+
     }
 }

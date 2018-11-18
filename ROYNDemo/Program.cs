@@ -26,6 +26,25 @@ namespace ROYNDemo
     public class Job : ModelBase
     {
         public virtual ICollection<User> Users { get; set; }
+
+        private int _DepartmentId;
+
+        [DataMember]
+        [ForeignKey(nameof(Department))]
+        public int DepartmentId
+        {
+            get { return _DepartmentId; }
+            set
+            {
+                if (value != _DepartmentId)
+                {
+                    _DepartmentId = value;
+                }
+            }
+        }
+
+        [DataMember]
+        public virtual Department Department { get; set; }
     }
 
     public abstract class ModelBase
@@ -156,7 +175,7 @@ namespace ROYNDemo
                     Password = $"{i}",
                     Birthday = DateTime.Now.AddDays(i),
                     Role = i % 2 == 0 ? Role.Admin : Role.User,
-                    Job = i % 2 == 0 ? new Job { Name = $"Job {i}" } : null,
+                    Job = i % 2 == 0 ? new Job { Name = $"Job {i}", Department = new Department { Name = $"Job {i} Department" } } : null,
                     Department = new Department { Name = $"Department {i}" },
                     Title = new Title { Name = $"Title {i}" },
                     ZipCode = "323265",
@@ -179,10 +198,11 @@ namespace ROYNDemo
             var query = new RoynRequest<User>()
                 .Add(x => x.Job.Name)
                 .Add(x => x.Job.Id)
+                .Add(x => x.Job.Department.Name)
                 .Add(x => x.Username)
                 .Add(x => x.Id)
                 .Add(x => x.Role)
-                .Add(x => x.JobId).OrderBy(x => x.Job.Name).Skip(1).Take(2);
+                .Add(x => x.JobId).OrderByDescending(x => x.Job.Department.Name).Skip(0).Take(5);
 
             var queryS = JsonConvert.SerializeObject(query);
             var queryF = JsonConvert.DeserializeObject<RoynRequest>(queryS);
@@ -199,6 +219,11 @@ namespace ROYNDemo
                 RoynResult q = context.Execute(queryF);
 
                 Console.WriteLine(q.Raw);
+                var result = q.GetResult<List<User>>();
+                Console.WriteLine();
+                Console.WriteLine();
+                Console.WriteLine();
+                Console.WriteLine(result.Count);
             }
 
             Console.ReadKey();

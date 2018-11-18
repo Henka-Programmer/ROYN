@@ -62,6 +62,11 @@ namespace ROYN
 
         public string TypeName { get; }
 
+        public DynamicTypeBuilder DefineProperty(PropertyInfo propertyInfo)
+        {
+            return DefineProperty(propertyInfo.Name, propertyInfo.PropertyType);
+        }
+
         public DynamicTypeBuilder DefineProperty(string propertyName, Type propertyType)
         {
             if (DynamicType != null)

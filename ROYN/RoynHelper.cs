@@ -201,16 +201,41 @@ namespace ROYN
 
         public static RoynResult RoynSelect<T>(this DbSet<T> source, RoynRequest<T> roynRequest) where T : class
         {
-            var builder = new SelectLambdaBuilder(roynRequest.CLRType);
             var includeSource = HandleIncludes(source.AsNoTracking(), roynRequest.Columns.ToArray());
             var filteredSource = HandleFilter(includeSource, roynRequest);
             var orderedDataSource = HandleOrder(filteredSource, roynRequest);
             var dataSource = HandleSkipTake(orderedDataSource, roynRequest);
-            dataSource = dataSource.Select(builder.CreateNewStatement<T, T>(roynRequest.Columns.ToArray()));
+            var dataSource2 = dataSource.Select(LambdaBuilder.BuildSelector<T, T>(roynRequest.Columns.ToArray()).Compile());
 
             var result = new RoynResult();
-            result.SetResult(dataSource.ToList(), roynRequest.Columns.ToArray());
+            result.SetResult(dataSource2.ToList(), roynRequest.Columns.ToArray());
 
+            return result;
+        }
+
+        public static RoynResult RoynSelect<T, TResult>(this DbSet<T> source, RoynRequest<T> roynRequest, RequestGraph graph) where T : class
+        {
+            var includeSource = HandleIncludes(source.AsNoTracking(), graph.Members.ToArray());
+            var filteredSource = HandleFilter(includeSource, roynRequest);
+            var orderedDataSource = HandleOrder(filteredSource, roynRequest);
+            var dataSource = HandleSkipTake(orderedDataSource, roynRequest);
+            var dataSource2 = dataSource.Select(LambdaBuilder.BuildSelector<T, TResult>(graph));
+
+            var result = new RoynResult();
+            result.SetResult(dataSource2.ToList(), roynRequest.Columns.ToArray());
+
+            return result;
+        }
+
+ 
+
+        public static RoynResult RoynSelect<T>(this IQueryable<T> source, RequestGraph graph) where T : class
+        {
+            var s = LambdaBuilder.BuildSelector<T, T>(graph);
+            var dataSource2 = source.Select(s);
+
+            var result = new RoynResult();
+            result.SetResult(dataSource2.ToList(), graph);
             return result;
         }
 
@@ -218,12 +243,11 @@ namespace ROYN
             where T : class
             where TResult : class
         {
-            var builder = new SelectLambdaBuilder(roynRequest.CLRType);
             var includeSource = HandleIncludes(source.AsNoTracking(), roynRequest.Columns.ToArray());
             var filteredSource = HandleFilter(includeSource, roynRequest);
             var orderedDataSource = HandleOrder(filteredSource, roynRequest);
             var dataSource = HandleSkipTake(orderedDataSource, roynRequest);
-            var resultsSource = dataSource.Select(builder.CreateNewStatement<T, TResult>(roynRequest.Columns.ToArray()));
+            var resultsSource = dataSource.Select(LambdaBuilder.BuildSelector<T, TResult>(roynRequest.Columns.ToArray()));
 
             var result = new RoynResult();
             result.SetResult(resultsSource.ToList(), roynRequest.Columns.ToArray());
