@@ -45,7 +45,8 @@ namespace WCFCommon.Services
         {
             using (var ctx = new ProductsDbContext())
             {
-                return ctx.Execute(request); ;
+                    return ctx.Execute(request);
+               
             }
         }
     }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 
 namespace ROYN
 {
@@ -98,9 +99,20 @@ namespace ROYN
                 else if (p is ComplexProperty complex)
                 {
                     var childMembers = complex.Properties;
-                    var targetValue = !childMembers.Any() ? sourceMember :
-                        NewObject(targetMember.Type, sourceMember, childMembers);
-                    bindings.Add(Expression.Bind(targetMember.Member, NullPropagate(sourceMember, targetValue)));
+                    try
+                    {
+                        var targetValue = !childMembers.Any() ? sourceMember :
+                                        NewObject(targetMember.Type, sourceMember, childMembers);
+                   
+                    bindings.Add(Expression.Bind(targetMember.Member, NullPropagate(sourceMember, targetValue))); }
+                    catch(TypeLoadException exx)
+                    {
+                        ;
+                    }
+                    catch (Exception)
+                    {
+                        ;
+                    }
                 }
             }
 

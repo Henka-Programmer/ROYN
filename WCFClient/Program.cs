@@ -34,7 +34,7 @@ namespace WCFClient
             var channelFactory = new ChannelFactory<IProductsService>(basicHttpBinding, endpoint);
 
             IProductsService service = channelFactory.CreateChannel(endpoint);
-            for (int i = 0; i <= 100; i += 10)
+            for (int i = 1; i <= 100; i += 10)
             {
                 RunIteration(service, i);
             }

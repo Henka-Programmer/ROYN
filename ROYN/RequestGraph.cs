@@ -109,7 +109,7 @@ namespace ROYN
 
         private static DynamicTypeBuilder BuildType(ComplexProperty property)
         {
-            var typeBuilder = new DynamicTypeBuilder(property.Info.PropertyType.Name);
+            var typeBuilder = new DynamicTypeBuilder($"{property.Info.PropertyType.Name}{Guid.NewGuid().ToString("N")}");
             foreach (var p in property.Properties)
             {
                 if (p is PrimitiveProperty primitive)

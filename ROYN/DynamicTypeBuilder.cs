@@ -7,9 +7,9 @@ namespace ROYN
 {
     public class DynamicTypeBuilder
     {
-        private ModuleBuilder dynamicModule;
+        private static ModuleBuilder dynamicModule;
         private TypeBuilder typeBuilder;
-        private AssemblyBuilder dynamicAssembly;
+        private static AssemblyBuilder dynamicAssembly;
 
         public DynamicTypeBuilder(string typeName)
         {
@@ -23,7 +23,7 @@ namespace ROYN
                 throw new InvalidOperationException("type name must be valid identifier");
             }
 
-            TypeName = $"ROYN_Dynamic{typeName}";
+            TypeName = $"ROYN_Dynamic{typeName}{Guid.NewGuid().ToString("N")}";
         }
 
         private Type DynamicType;
@@ -36,17 +36,23 @@ namespace ROYN
                 return DynamicType;
             }
 
-            dynamicAssembly = AppDomain.CurrentDomain.DefineDynamicAssembly(new AssemblyName("ROYN.DYNAMIC.TYPES"), AssemblyBuilderAccess.Run);
-            dynamicModule = dynamicAssembly.DefineDynamicModule("ROYN.DYNAMIC.ASSEMBLY.MODULE");
-            typeBuilder = dynamicModule.DefineType(TypeName, TypeAttributes.Public);
+            dynamicAssembly = dynamicAssembly ?? AppDomain.CurrentDomain.DefineDynamicAssembly(new AssemblyName($"ROYN.DYNAMIC.TYPES"), AssemblyBuilderAccess.Run);
+            dynamicModule = dynamicModule ?? dynamicAssembly.DefineDynamicModule("ROYN.DYNAMIC.ASSEMBLY.MODULE");
+            typeBuilder = dynamicModule.DefineType(TypeName, TypeAttributes.Public |
+                    TypeAttributes.Class |
+                    TypeAttributes.AutoClass |
+                    TypeAttributes.AnsiClass |
+                    TypeAttributes.BeforeFieldInit |
+                    TypeAttributes.AutoLayout,
+                    null);
 
             lock (locker)
             {
                 foreach (var propertyDef in propertiesDefinitions)
                 {
-                    if (propertyDef.Value is Type)
+                    if (propertyDef.Value is Type type)
                     {
-                        AddProperty(typeBuilder, propertyDef.Key, (Type)propertyDef.Value);
+                        AddProperty(typeBuilder, propertyDef.Key, type);
                     }
                     else if (propertyDef.Value is DynamicTypeBuilder tb)
                     {
