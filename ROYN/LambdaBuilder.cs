@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
 
 namespace ROYN
 {
@@ -71,9 +70,10 @@ namespace ROYN
 
         public static Expression<Func<TSource, TTarget>> BuildSelector<TSource, TTarget>(RequestGraph graph)
         {
-            var parameter = Expression.Parameter(typeof(TSource), "e");
-            var body = NewObject(typeof(TTarget), parameter, graph.Properties); 
-            return Expression.Lambda<Func<TSource, TTarget>>(body, parameter);
+            //var parameter = Expression.Parameter(typeof(TSource), "e");
+            //var body = NewObject(typeof(TTarget), parameter, graph.Members.);
+            //return Expression.Lambda<Func<TSource, TTarget>>(body, parameter);
+            return BuildSelector<TSource, TTarget>(graph.Members);
         }
 
         private static ConditionalExpression NullPropagate(Expression baseExpr, Expression returnExpr)
@@ -81,43 +81,35 @@ namespace ROYN
             var equals = Expression.Equal(baseExpr, Expression.Constant(null));
             return Expression.Condition(equals, Expression.Constant(null, returnExpr.Type), returnExpr);
         }
-        private static Expression NewObject(Type targetType, Expression source, List<Property> properties)
-        {
-            var bindings = new List<MemberBinding>();
-            var target = Expression.Constant(null, targetType);
 
-            foreach (var p in properties)
-            {
-                var memberName = p.Info.Name;
-                var targetMember = Expression.PropertyOrField(target, memberName);
-                var sourceMember = Expression.PropertyOrField(source, memberName);
+        //    private static Expression NewObject(Type targetType, Expression source, List<Property> properties)
+        //    {
+        //        var bindings = new List<MemberBinding>();
+        //        var target = Expression.Constant(null, targetType);
 
-                if (p is PrimitiveProperty primitive)
-                {
-                    bindings.Add(Expression.Bind(targetMember.Member, sourceMember));
-                }
-                else if (p is ComplexProperty complex)
-                {
-                    var childMembers = complex.Properties;
-                    try
-                    {
-                        var targetValue = !childMembers.Any() ? sourceMember :
-                                        NewObject(targetMember.Type, sourceMember, childMembers);
-                   
-                    bindings.Add(Expression.Bind(targetMember.Member, NullPropagate(sourceMember, targetValue))); }
-                    catch(TypeLoadException exx)
-                    {
-                        ;
-                    }
-                    catch (Exception)
-                    {
-                        ;
-                    }
-                }
-            }
+        //        foreach (var p in properties)
+        //        {
+        //            var memberName = p.Info.Name;
+        //            var targetMember = Expression.PropertyOrField(target, memberName);
+        //            var sourceMember = Expression.PropertyOrField(source, memberName);
 
-            return Expression.MemberInit(Expression.New(targetType), bindings);
-        }
+        //            if (p is PrimitiveProperty primitive)
+        //            {
+        //                bindings.Add(Expression.Bind(targetMember.Member, sourceMember));
+        //            }
+        //            else if (p is ComplexProperty complex)
+        //            {
+        //                var childMembers = complex.Properties;
+
+        //                var targetValue = !childMembers.Any() ? sourceMember :
+        //                                NewObject(targetMember.Type, sourceMember, childMembers);
+
+        //                bindings.Add(Expression.Bind(targetMember.Member, NullPropagate(sourceMember, targetValue)));
+        //            }
+        //        }
+
+        //        return Expression.MemberInit(Expression.New(targetType), bindings);
+        //    }
 
         private static Expression NewObject(Type targetType, Expression source, IEnumerable<string[]> memberPaths, int depth = 0)
         {
@@ -131,7 +123,15 @@ namespace ROYN
                 var childMembers = memberGroup.Where(path => depth + 1 < path.Length);
                 var targetValue = !childMembers.Any() ? sourceMember :
                     NewObject(targetMember.Type, sourceMember, childMembers, depth + 1);
-                bindings.Add(Expression.Bind(targetMember.Member, targetValue));
+                if (sourceMember.Type.IsClass && sourceMember.Type != typeof(string))
+                {
+                    bindings.Add(Expression.Bind(targetMember.Member, NullPropagate(sourceMember, targetValue)));
+                }
+                else
+                {
+                    bindings.Add(Expression.Bind(targetMember.Member, sourceMember));
+
+                }
             }
             return Expression.MemberInit(Expression.New(targetType), bindings);
         }

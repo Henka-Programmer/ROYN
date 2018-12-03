@@ -38,10 +38,11 @@ namespace ROYN
             return RoynHelper.RoynSelect<T, TResult>(source, roynRequest.AsGeneric<T>(), graph);
         }
 
-        //public RoynResult Execute<T>(DbSet source, RoynRequest roynRequest) where T : class
-        //{
-        //    return RoynHelper.RoynSelect(source as DbSet<T>, roynRequest.AsGeneric<T>());
-        //}
+        public RoynResult Execute<T>(DbSet<T> source, RoynRequest roynRequest, RequestGraph graph)
+       where T : class
+        {
+            return RoynHelper.RoynSelect<T>(source, roynRequest.AsGeneric<T>(), graph);
+        }
 
         public void Dispose()
         {

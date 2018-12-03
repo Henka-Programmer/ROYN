@@ -24,18 +24,6 @@ namespace ROYN
             }
 
             TypeName = $"ROYN_Dynamic{typeName}{Guid.NewGuid().ToString("N")}";
-        }
-
-        private Type DynamicType;
-        private readonly object locker = new object();
-
-        public Type CreateType()
-        {
-            if (DynamicType != null)
-            {
-                return DynamicType;
-            }
-
             dynamicAssembly = dynamicAssembly ?? AppDomain.CurrentDomain.DefineDynamicAssembly(new AssemblyName($"ROYN.DYNAMIC.TYPES"), AssemblyBuilderAccess.Run);
             dynamicModule = dynamicModule ?? dynamicAssembly.DefineDynamicModule("ROYN.DYNAMIC.ASSEMBLY.MODULE");
             typeBuilder = dynamicModule.DefineType(TypeName, TypeAttributes.Public |
@@ -45,6 +33,19 @@ namespace ROYN
                     TypeAttributes.BeforeFieldInit |
                     TypeAttributes.AutoLayout,
                     null);
+        }
+
+        private Type definedType;
+        private readonly object locker = new object();
+
+        public Type CreateType()
+        {
+            if (definedType != null)
+            {
+                return definedType;
+            }
+
+          
 
             lock (locker)
             {
@@ -54,31 +55,33 @@ namespace ROYN
                     {
                         AddProperty(typeBuilder, propertyDef.Key, type);
                     }
-                    else if (propertyDef.Value is DynamicTypeBuilder tb)
+                    else if (propertyDef.Value is TypeBuilder tb)
                     {
-                        AddProperty(typeBuilder, propertyDef.Key, tb.CreateType());
+                        AddProperty(typeBuilder, propertyDef.Key, tb);
                     }
                 }
             }
 
-            return DynamicType = typeBuilder.CreateType();
+            return definedType = typeBuilder.CreateType();
         }
 
-        private Dictionary<string, dynamic> propertiesDefinitions = new Dictionary<string, dynamic>();
+        private Dictionary<string, Type> propertiesDefinitions = new Dictionary<string, Type>();
 
         public string TypeName { get; }
 
         public DynamicTypeBuilder DefineProperty(PropertyInfo propertyInfo)
         {
-            return DefineProperty(propertyInfo.Name, propertyInfo.PropertyType);
+           
+                return DefineProperty(propertyInfo.Name, propertyInfo.PropertyType);
         }
 
         public DynamicTypeBuilder DefineProperty(string propertyName, Type propertyType)
         {
-            if (DynamicType != null)
+            if (definedType != null)
             {
                 throw new InvalidOperationException("Couldn't Define Properties for a Generated Type, DefineProperty Method shouldn't be called after CreateType Method");
             }
+
             if (propertiesDefinitions.ContainsKey(propertyName))
             {
                 throw new InvalidOperationException($"'{propertyName}' Property already defined!");
@@ -89,7 +92,7 @@ namespace ROYN
 
         public DynamicTypeBuilder DefineProperty(string propertyName, DynamicTypeBuilder propertyType)
         {
-            propertiesDefinitions.Add(propertyName, propertyType);
+            propertiesDefinitions.Add(propertyName, propertyType.typeBuilder);
             return this;
         }
 

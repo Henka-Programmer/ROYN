@@ -21,6 +21,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <LangVersion>7.3</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -30,6 +31,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <LangVersion>7.3</LangVersion>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -58,6 +60,10 @@
     <ProjectReference Include="..\WCFCommon\WCFCommon.csproj">
       <Project>{C2BB5F22-19DF-4C2E-9061-9D1DB485F49D}</Project>
       <Name>WCFCommon</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\WCFLatencySimulator\WCFLatencySimulator.csproj">
+      <Project>{68BB0D9D-6714-4172-8E7B-F0330DADD667}</Project>
+      <Name>WCFLatencySimulator</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

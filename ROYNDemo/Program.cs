@@ -159,6 +159,7 @@ namespace ROYNDemo
     [Table("Companies")]
     public class Company : ModelBase
     {
+         
     }
 
     internal class Program
@@ -195,6 +196,12 @@ namespace ROYNDemo
 
         private static void Main(string[] args)
         {
+             
+
+            Royn.Configure(typeof(User));
+            Royn.Configure(typeof(Job));
+            Royn.Configure(typeof(Department)); 
+
             var query = new RoynRequest<User>()
                 .Add(x => x.Job.Name)
                 .Add(x => x.Job.Id)
@@ -203,7 +210,7 @@ namespace ROYNDemo
                 .Add(x => x.Id)
                 .Add(x => x.Role)
                 .Add(x => x.JobId).OrderByDescending(x => x.Job.Department.Name).Skip(0).Take(5);
-
+           
             var queryS = JsonConvert.SerializeObject(query);
             var queryF = JsonConvert.DeserializeObject<RoynRequest>(queryS);
 
@@ -225,7 +232,6 @@ namespace ROYNDemo
                 Console.WriteLine();
                 Console.WriteLine(result.Count);
             }
-
             Console.ReadKey();
         }
     }

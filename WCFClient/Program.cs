@@ -1,4 +1,5 @@
-﻿using ROYN;
+﻿using MilestoneTG.WcfLatencySimulator.Wcf;
+using ROYN;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -32,11 +33,11 @@ namespace WCFClient
             var endpoint = new EndpointAddress(serviceUrl);
 
             var channelFactory = new ChannelFactory<IProductsService>(basicHttpBinding, endpoint);
-
+            channelFactory.Endpoint.EndpointBehaviors.Add(new SimulatorClientBehavior());
             IProductsService service = channelFactory.CreateChannel(endpoint);
-            for (int i = 1; i <= 100; i += 10)
+            for (int i = 1; i <= 5; i++)
             {
-                RunIteration(service, i);
+                RunIteration(service, i*1000);
             }
 
             Console.ReadKey();
@@ -53,18 +54,16 @@ namespace WCFClient
             var stopWatch2 = Stopwatch.StartNew();
             var query = new RoynRequest<Product>()
                 .Add(x => x.Name)
-                .Add(x => x.SaleUoM.Name)
                 .Add(x => x.SaleUoM.Id)
-                .Add(x => x.PurchasesUoM.Name)
+                .Add(x => x.SaleUoM.Name)
+                .Add(x => x.SaleUoM.Category.Id)
+                .Add(x => x.SaleUoM.Category.Name)
                 .Add(x => x.PurchasesUoM.Id)
+                .Add(x => x.PurchasesUoM.Name)
+                .Add(x => x.PurchasesUoM.Category.Id)
+                .Add(x => x.PurchasesUoM.Category.Name)
                 .Add(x => x.Category.Name)
                 .Add(x => x.Category.Id)
-                .Add(x => x.Category.ParentCategory.Name)
-                .Add(x => x.Category.ParentCategory.Id)
-                .Add(x => x.SaleUoM.Category.Name)
-                .Add(x => x.SaleUoM.Category.Id)
-                .Add(x => x.PurchasesUoM.Category.Name)
-                .Add(x => x.PurchasesUoM.Category.Id)
                 .Add(x => x.Weight)
                 .Add(x => x.Volum)
                 .Add(x => x.SoldInPOS)

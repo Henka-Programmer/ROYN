@@ -23,6 +23,9 @@ namespace ROYNTests
         [TestMethod]
         public void Select()
         {
+            Royn.Configure(typeof(ComplextModel));
+            Royn.Configure(typeof(NestedModel));
+
             var source = new List<ComplextModel>()
             {
                 new ComplextModel{ Name="1",Age=1, Date= DateTime.Now, NestedModel = new NestedModel{NestedModelName = "nested", ComplextModel = new ComplextModel{ Name = "oooh", NestedModel = new NestedModel{  NestedModelName = "2222", ComplextModel = new ComplextModel{ Name = "bababa"} } } } },
@@ -33,7 +36,6 @@ namespace ROYNTests
 
             var request = new RoynRequest<ComplextModel>().Add(x => x.Name).Add(x => x.NestedModel.NestedModelName).Add(x=>x.NestedModel.ComplextModel.Name).Add(x=>x.NestedModel.ComplextModel.NestedModel.ComplextModel.Name);
             var graph = RequestGraph.BuildGraph(request);
-            var t = graph.BuildType();
             var result = RoynHelper.RoynSelect(source.AsQueryable(), graph);
            
             var list = result.GetResult<List<ComplextModel>>();

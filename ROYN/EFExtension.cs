@@ -44,14 +44,12 @@ namespace ROYN
         {
             using (var excutor = new RoynExecutor())
             {
-                var type = excutor.TypeNameResolver.Resolve(roynRequest.TypeName);
-                roynRequest.CLRType = type;
                 var graph = RequestGraph.BuildGraph(roynRequest, excutor.TypeNameResolver);
-                MethodInfo genericExecuteMethod = typeof(RoynExecutor).GetGenericMethod("Execute", new Type[] { type,graph.BuildType() }, new Type[] { typeof(DbSet<>), typeof(RoynRequest), typeof(RequestGraph) }, typeof(RoynResult));   //executeMethod.MakeGenericMethod(type);
+                MethodInfo genericExecuteMethod = typeof(RoynExecutor).GetGenericMethod("Execute", new Type[] { graph.CLRType, graph.SelectType }, new Type[] { typeof(DbSet<>), typeof(RoynRequest), typeof(RequestGraph) }, typeof(RoynResult));   //executeMethod.MakeGenericMethod(type);
 
-                MethodInfo genericDbSetMethod = typeof(DbContext).GetGenericMethod("Set", new Type[] { type}, new Type[] { }, typeof(DbSet<>));
+                MethodInfo genericDbSetMethod = typeof(DbContext).GetGenericMethod("Set", new Type[] { graph.CLRType }, new Type[] { }, typeof(DbSet<>));
 
-                return (RoynResult)genericExecuteMethod.Invoke(excutor, new object[] { genericDbSetMethod.Invoke(context, null), roynRequest,graph });
+                return (RoynResult)genericExecuteMethod.Invoke(excutor, new object[] { genericDbSetMethod.Invoke(context, null), roynRequest, graph });
             }
         }
     }

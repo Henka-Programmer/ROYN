@@ -69,12 +69,6 @@ namespace ROYN
             return orderedSource;
         }
 
-        private static ConditionalExpression NullPropagate(Expression baseExpr, Expression returnExpr)
-        {
-            var equals = Expression.Equal(baseExpr, Expression.Constant(null));
-            return Expression.Condition(equals, Expression.Constant(null, returnExpr.Type), returnExpr);
-        }
-
         private static Expression<Func<T, TReturnType>> GetLambda<T, TReturnType>(IEnumerable<string> propertyNames)
         {
             var rootParameterExression = Expression.Parameter(typeof(T));
@@ -205,10 +199,10 @@ namespace ROYN
             var filteredSource = HandleFilter(includeSource, roynRequest);
             var orderedDataSource = HandleOrder(filteredSource, roynRequest);
             var dataSource = HandleSkipTake(orderedDataSource, roynRequest);
-            var dataSource2 = dataSource.Select(LambdaBuilder.BuildSelector<T, T>(roynRequest.Columns.ToArray()).Compile());
+            // var dataSource2 = dataSource.Select(LambdaBuilder.BuildSelector<T, T>(roynRequest.Columns.ToArray()).Compile());
 
             var result = new RoynResult();
-            result.SetResult(dataSource2.ToList(), roynRequest.Columns.ToArray());
+            result.SetResult(dataSource.ToList(), roynRequest.Columns.ToArray());
 
             return result;
         }
@@ -219,25 +213,37 @@ namespace ROYN
             var filteredSource = HandleFilter(includeSource, roynRequest);
             var orderedDataSource = HandleOrder(filteredSource, roynRequest);
             var dataSource = HandleSkipTake(orderedDataSource, roynRequest);
-            var dataSource2 = dataSource.Select(LambdaBuilder.BuildSelector<T, TResult>(graph));
+            var dataSource2 = dataSource.Select(LambdaBuilder.BuildSelector<T, TResult>(graph.Members));
 
             var result = new RoynResult();
-            result.SetResult(dataSource2.ToList(), roynRequest.Columns.ToArray());
+            var ds = dataSource2.ToList();
+            result.SetResult(ds, roynRequest.Columns.ToArray());
 
             return result;
         }
 
- 
-
-        public static RoynResult RoynSelect<T>(this IQueryable<T> source, RequestGraph graph) where T : class
+        public static RoynResult RoynSelect<T>(this DbSet<T> source, RoynRequest<T> roynRequest, RequestGraph graph) where T : class
         {
-            var s = LambdaBuilder.BuildSelector<T, T>(graph);
-            var dataSource2 = source.Select(s);
-
+            var includeSource = HandleIncludes(source.AsNoTracking(), graph.Members.ToArray());
+            var filteredSource = HandleFilter(includeSource, roynRequest);
+            var orderedDataSource = HandleOrder(filteredSource, roynRequest);
+            var dataSource = HandleSkipTake(orderedDataSource, roynRequest);
+            var ds = dataSource.Select(LambdaBuilder.BuildSelector<T, T>(graph));
             var result = new RoynResult();
-            result.SetResult(dataSource2.ToList(), graph);
+            result.SetResult(ds.ToList(), roynRequest.Columns.ToArray());
+
             return result;
         }
+
+        //public static RoynResult RoynSelect<T>(this IQueryable<T> source, RequestGraph graph) where T : class
+        //{
+        //    var s = LambdaBuilder.BuildSelector<T, T>(graph);
+        //    var dataSource2 = source.Select(s);
+
+        //    var result = new RoynResult();
+        //    result.SetResult(dataSource2.ToList(), graph);
+        //    return result;
+        //}
 
         public static RoynResult RoynSelect<T, TResult>(this DbSet<T> source, RoynRequest<T> roynRequest)
             where T : class
@@ -247,10 +253,10 @@ namespace ROYN
             var filteredSource = HandleFilter(includeSource, roynRequest);
             var orderedDataSource = HandleOrder(filteredSource, roynRequest);
             var dataSource = HandleSkipTake(orderedDataSource, roynRequest);
-            var resultsSource = dataSource.Select(LambdaBuilder.BuildSelector<T, TResult>(roynRequest.Columns.ToArray()));
+            //  var resultsSource = dataSource.Select(LambdaBuilder.BuildSelector<T, TResult>(roynRequest.Columns.ToArray()));
 
             var result = new RoynResult();
-            result.SetResult(resultsSource.ToList(), roynRequest.Columns.ToArray());
+            result.SetResult(dataSource.ToList(), roynRequest.Columns.ToArray());
             return result;
         }
 
@@ -286,50 +292,50 @@ namespace ROYN
             return q;
         }
 
-        public static IQueryable<TResult> Select<TResult>(this IQueryable source, string[] columns)
-        {
-            var sourceType = source.ElementType;
-            var resultType = typeof(TResult);
-            var parameter = Expression.Parameter(sourceType, "e");
-            var bindings = columns.Select(column => Expression.Bind(
-                resultType.GetProperty(column), Expression.PropertyOrField(parameter, column)));
-            var body = Expression.MemberInit(Expression.New(resultType), bindings);
-            var selector = Expression.Lambda(body, parameter);
-            return source.Provider.CreateQuery<TResult>(
-                Expression.Call(typeof(Queryable), "Select", new Type[] { sourceType, resultType },
-                    source.Expression, Expression.Quote(selector)));
-        }
+        //public static IQueryable<TResult> Select<TResult>(this IQueryable source, string[] columns)
+        //{
+        //    var sourceType = source.ElementType;
+        //    var resultType = typeof(TResult);
+        //    var parameter = Expression.Parameter(sourceType, "e");
+        //    var bindings = columns.Select(column => Expression.Bind(
+        //        resultType.GetProperty(column), Expression.PropertyOrField(parameter, column)));
+        //    var body = Expression.MemberInit(Expression.New(resultType), bindings);
+        //    var selector = Expression.Lambda(body, parameter);
+        //    return source.Provider.CreateQuery<TResult>(
+        //        Expression.Call(typeof(Queryable), "Select", new Type[] { sourceType, resultType },
+        //            source.Expression, Expression.Quote(selector)));
+        //}
 
-        public static Func<T, TResult> CreateNewStatement<T, TResult>(string[] columns)
-        {
-            // input parameter "o"
-            var xParameter = Expression.Parameter(typeof(T), "o");
+        //public static Func<T, TResult> CreateNewStatement<T, TResult>(string[] columns)
+        //{
+        //    // input parameter "o"
+        //    var xParameter = Expression.Parameter(typeof(T), "o");
 
-            // new statement "new Data()"
-            var xNew = Expression.New(typeof(TResult));
+        //    // new statement "new Data()"
+        //    var xNew = Expression.New(typeof(TResult));
 
-            // create initializers
-            var bindings = columns
-                .Select(o =>
-                {
-                    // property "Field1"
-                    var mi = typeof(T).GetProperty(o);
+        //    // create initializers
+        //    var bindings = columns
+        //        .Select(o =>
+        //        {
+        //            // property "Field1"
+        //            var mi = typeof(T).GetProperty(o);
 
-                    // original value "o.Field1"
-                    var xOriginal = Expression.Property(xParameter, mi);
+        //            // original value "o.Field1"
+        //            var xOriginal = Expression.Property(xParameter, mi);
 
-                    // set value "Field1 = o.Field1"
-                    return Expression.Bind(mi, xOriginal);
-                }
-            );
+        //            // set value "Field1 = o.Field1"
+        //            return Expression.Bind(mi, xOriginal);
+        //        }
+        //    );
 
-            // initialization "new Data { Field1 = o.Field1, Field2 = o.Field2 }"
-            var xInit = Expression.MemberInit(xNew, bindings);
+        //    // initialization "new Data { Field1 = o.Field1, Field2 = o.Field2 }"
+        //    var xInit = Expression.MemberInit(xNew, bindings);
 
-            // expression "o => new Data { Field1 = o.Field1, Field2 = o.Field2 }"
-            var lambda = Expression.Lambda<Func<T, TResult>>(xInit, xParameter);
+        //    // expression "o => new Data { Field1 = o.Field1, Field2 = o.Field2 }"
+        //    var lambda = Expression.Lambda<Func<T, TResult>>(xInit, xParameter);
 
-            return lambda.Compile();
-        }
+        //    return lambda.Compile();
+        //}
     }
 }

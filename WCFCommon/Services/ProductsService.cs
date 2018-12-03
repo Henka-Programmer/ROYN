@@ -12,6 +12,11 @@ namespace WCFCommon.Services
     {
         static ProductsService()
         {
+            Royn.Configure(typeof(MeasureUnit));
+            Royn.Configure(typeof(MeasureUnitCategory));
+            Royn.Configure(typeof(Product));
+            Royn.Configure(typeof(ProductCategory));
+
             using (var ctx = new ProductsDbContext())
             {
                 if (!ctx.Database.Exists())
@@ -28,9 +33,9 @@ namespace WCFCommon.Services
                 using (var ctx = new ProductsDbContext())
                 {
                     var r = ctx.Products
-                        .Include(x => x.PurchasesUoM.Category)
-                        .Include(x => x.SaleUoM.Category)
-                        .Include(x => x.Category.ParentCategory).OrderBy(x => x.Id).Skip(0).Take(size).ToList();
+                                .Include(x => x.PurchasesUoM.Category)
+                                .Include(x => x.SaleUoM.Category)
+                                .Include(x => x.Category.ParentCategory).OrderBy(x => x.Id).Skip(0).Take(size).ToList();
                     return r;
                 }
             }
@@ -43,10 +48,17 @@ namespace WCFCommon.Services
 
         public override RoynResult Execute(RoynRequest request)
         {
-            using (var ctx = new ProductsDbContext())
+            try
             {
+                using (var ctx = new ProductsDbContext())
+                {
                     return ctx.Execute(request);
-               
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+                return null;
             }
         }
     }

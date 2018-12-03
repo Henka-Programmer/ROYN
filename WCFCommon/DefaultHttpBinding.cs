@@ -16,8 +16,8 @@ namespace WCFCommon
             ReaderQuotas.MaxBytesPerRead = 1073741824;
             ReaderQuotas.MaxStringContentLength = 1073741824;
             UseDefaultWebProxy = false;
-            ReceiveTimeout = TimeSpan.FromSeconds(20);
-            SendTimeout = TimeSpan.FromSeconds(20);
+            ReceiveTimeout = TimeSpan.FromMinutes(20);
+            SendTimeout = TimeSpan.FromMinutes(20);
         }
     }
 }

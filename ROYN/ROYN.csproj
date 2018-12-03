@@ -21,6 +21,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <LangVersion>7.3</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -29,6 +30,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <LangVersion>7.3</LangVersion>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="EntityFramework">
@@ -68,6 +70,7 @@
     <Compile Include="PropertyPathHelper.cs" />
     <Compile Include="RequestGraph.cs" />
     <Compile Include="ResolveOptions.cs" />
+    <Compile Include="Royn.cs" />
     <Compile Include="RoynExecutor.cs" />
     <Compile Include="RoynHelper.cs" />
     <Compile Include="RoynRequest.cs" />
